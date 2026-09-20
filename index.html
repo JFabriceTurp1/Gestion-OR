@@ -36,12 +36,46 @@
 #newor .guide-locked{filter:grayscale(.7);opacity:.38;pointer-events:none;user-select:none}
 #newor .guide-current{outline:3px solid rgba(224,168,0,.45);box-shadow:0 0 0 5px rgba(224,168,0,.10)}
 #newor .guide-current input,#newor .guide-current select{background:#fffbe8;border-color:#d59d00}
+
+/* V36 - compatibilité iPhone / Safari mobile */
+html{-webkit-text-size-adjust:100%}
+body{min-height:100dvh}
+button,input,select,textarea{font-size:16px}
+button,.btn,.nav button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+@supports(padding:max(0px)){
+  .side{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
+  .main{padding-bottom:max(50px,calc(env(safe-area-inset-bottom) + 24px))}
+  #appLock,#settingsLock{padding-top:max(20px,env(safe-area-inset-top));padding-bottom:max(20px,env(safe-area-inset-bottom))}
+}
+@media(max-width:650px){
+  .app{display:block;min-height:100dvh}
+  .side{height:auto;position:relative;padding-top:max(14px,env(safe-area-inset-top));padding-bottom:14px}
+  .brand{padding-bottom:10px;margin-bottom:10px}
+  .brand b{font-size:17px}
+  .nav{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+  .nav button{min-height:46px;padding:10px 8px;font-size:14px}
+  .side>.btn.danger{min-height:44px}
+  .main{padding:14px 12px max(30px,env(safe-area-inset-bottom))}
+  .top{gap:8px;align-items:flex-start;flex-wrap:wrap}
+  .top h1{font-size:23px}
+  .datepill{font-size:12px}
+  .card{padding:14px;border-radius:12px}
+  .field input,.field select,.field textarea{min-height:46px;padding:11px 10px;font-size:16px}
+  .field textarea{min-height:100px}
+  .actions .btn{min-height:44px;flex:1 1 145px}
+  #orGuide{position:sticky;top:0;z-index:20;padding:12px;font-size:14px;box-shadow:0 3px 10px rgba(0,0,0,.12)}
+  .tablewrap{-webkit-overflow-scrolling:touch}
+  .lockCard{width:100%;max-width:430px;padding:22px 18px}
+}
 </style>
 </head><body><div id="appLock"><div class="lockCard"><h2>Accès au logiciel OR</h2><p>Saisir le code d’accès au logiciel.</p><input id="appCodeInput" type="password" autocomplete="off" placeholder="Code"><button class="btn primary" style="width:100%" onclick="unlockApp()">Ouvrir le logiciel</button><div id="appCodeError" class="lockError"></div></div></div>
 <div id="settingsLock" style="display:none"><div class="lockCard"><h2>Paramètres protégés</h2><p>Saisir le code réservé aux paramètres.</p><input id="settingsCodeInput" type="password" autocomplete="off" placeholder="Code paramètres"><div style="display:flex;gap:8px"><button class="btn ghost" style="flex:1" onclick="cancelSettingsUnlock()">Annuler</button><button class="btn primary" style="flex:1" onclick="unlockSettings()">Ouvrir</button></div><div id="settingsCodeError" class="lockError"></div></div></div>
 <div class="app">
-<aside class="side"><div class="brand"><small>Lycée François de Mahy</small><b>Atelier P<br>Suivi des OR</b></div><div class="nav"><button class="active" data-page="dashboard">▦ Tableau de bord</button><button data-page="newor">＋ Nouvel OR</button><button data-page="history">↺ Historique</button><button data-page="vehicles">🚗 Véhicules</button><button data-page="clients">👤 Clients</button><button data-page="blankor">📄 Voir OR exemple</button><button data-page="settings">⚙ Paramètres</button></div><button class="btn danger" style="margin:12px;width:calc(100% - 24px)" onclick="quitApplication()">⏻ Quitter</button><div class="foot">Prototype V35 - saisie guidée et OR exemple synchronisé</div></aside>
-<main class="main"><div class="top"><div><h1 id="pageTitle">Tableau de bord</h1><p id="pageSub">Gestion locale des ordres de réparation</p></div><div class="datepill" id="today"></div></div>
+<aside class="side"><div class="brand"><small>Lycée François de Mahy</small><b>Atelier P<br>Suivi des OR</b></div><div class="nav"><button class="active" data-page="dashboard">▦ Tableau de bord</button><button data-page="newor">＋ Nouvel OR</button><button data-page="history">↺ Historique</button><button data-page="vehicles">🚗 Véhicules</button><button data-page="clients">👤 Clients</button><button data-page="blankor">📄 Voir OR exemple</button><button data-page="settings">⚙ Paramètres</button></div><button class="btn danger" style="margin:12px;width:calc(100% - 24px)" onclick="quitApplication()">⏻ Quitter</button><div class="foot">Prototype V37 - sauvegarde locale iPhone</div></aside>
+<main class="main"><div class="top"><div><h1 id="pageTitle">Tableau de bord</h1><p id="pageSub">Gestion locale des ordres de réparation</p></div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+<div class="datepill" id="storageStatus" title="Les données sont conservées localement sur cet appareil">● Données locales</div>
+<div class="datepill" id="today"></div>
+</div></div>
 <section id="dashboard" class="page active"><div class="kpis"><div class="card kpi"><span class="muted small">VÉHICULES</span><b id="kv">0</b></div><div class="card kpi"><span class="muted small">ORDRES DE RÉPARATION</span><b id="ko">0</b></div><div class="card kpi"><span class="muted small">OR CE MOIS</span><b id="km">0</b></div></div><div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h2>Derniers OR</h2><button class="btn primary" onclick="newOrder()">Créer un OR</button></div><div id="recent"></div></div></section>
 <section id="newor" class="page"><div class="notice"><b>V3 :</b> la saisie informatique est volontairement simplifiée. Les contrôles techniques et visuels restent présents sur l’OR imprimé mais leurs cases sont laissées vierges afin d’être complétées manuellement sur le véhicule.</div><div id="orGuide">Merci de saisir l’immatriculation pour commencer.</div>
 <div class="card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div><h2 style="margin:0">Ordre de réparation <span id="orBadge" class="badge">Nouveau</span></h2><span class="muted small">Seules les informations à préparer avant l’accueil du véhicule sont saisies dans le logiciel.</span></div><div class="actions"><button class="btn ghost" onclick="clearForm();startOrGuide()">Réinitialiser</button><button class="btn secondary" onclick="printOrder()">Imprimer OR</button></div></div></div>
@@ -53,7 +87,7 @@
     </select>
   </div>
 </div></div></div>
-<div class="card or-vehicle" id="vehicleBlock"><div class="sectionbar">Identification du véhicule</div><div class="grid g4"><div class="field"><label>Immatriculation</label><input id="plate" list="plates" autocomplete="off" onchange="vehicleLookup();advanceOrGuide()" onkeydown="if(event.key==='Enter'){event.preventDefault();vehicleLookup();advanceOrGuide()}"></div><div class="field"><label>Marque</label><input id="brand" oninput="advanceOrGuide()"></div><div class="field"><label>Modèle</label><input id="model" oninput="advanceOrGuide()"></div><div class="field span2"><label>N° de série / VIN</label><input id="vin" oninput="advanceOrGuide()"></div></div><p class="muted small" style="margin:12px 0 0">Les autres rubriques techniques restent volontairement vierges sur l’OR imprimé afin d’être complétées à la main lors de la réception du véhicule.</p></div>
+<div class="card or-vehicle" id="vehicleBlock"><div class="sectionbar">Identification du véhicule</div><div class="grid g4"><div class="field"><label>Immatriculation <span style="color:#c62828">*</span></label><input id="plate" required list="plates" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" inputmode="text" onchange="vehicleLookup();advanceOrGuide()" onkeydown="if(event.key==='Enter'){event.preventDefault();vehicleLookup();advanceOrGuide()}"></div><div class="field"><label>Marque</label><input id="brand" oninput="advanceOrGuide()"></div><div class="field"><label>Modèle</label><input id="model" oninput="advanceOrGuide()"></div><div class="field span2"><label>N° de série / VIN</label><input id="vin" oninput="advanceOrGuide()"></div></div><p class="muted small" style="margin:12px 0 0">Les autres rubriques techniques restent volontairement vierges sur l’OR imprimé afin d’être complétées à la main lors de la réception du véhicule.</p></div>
 <div class="card or-client" id="clientBlock"><div class="sectionbar">Client</div><div class="grid g4"><div class="field"><label>Nom</label><input id="lastName"></div><div class="field"><label>Prénom</label><input id="firstName"></div><div class="field span2"><label>Adresse</label><input id="address"></div><div class="field"><label>Code postal / ville</label><input id="city"></div><div class="field"><label>Téléphone portable</label><input id="phone"></div><div class="field span2"><label>Mail</label><input id="email" type="email"></div></div></div>
 <div class="card or-request" id="requestBlock"><div class="grid g2"><div class="field"><label>Symptômes</label><textarea id="symptoms"></textarea></div><div class="field"><label>Travaux demandés (remplacement et vidange)</label><textarea id="work"></textarea></div></div></div>
 
@@ -80,7 +114,14 @@
       <div class="field"><label>Observations et conditions d'utilisation</label><textarea id="notes"></textarea></div>
     </div>
 </section>
-<section id="history" class="page"><div class="card"><div style="display:flex;justify-content:space-between;gap:10px"><h2>Historique des OR</h2><input id="historySearch" placeholder="Rechercher OR, immatriculation, client..." oninput="renderHistory()" style="max-width:340px;width:100%;padding:9px;border:1px solid var(--line);border-radius:8px"></div><div id="historyTable"></div></div></section>
+<section id="history" class="page"><div class="card" style="border-left:6px solid #0f766e;background:#ecfdf5">
+<div class="sectionbar" style="background:#0f766e">Sauvegarde locale de l’appareil</div>
+<p class="muted">Les OR sont enregistrés sur cet appareil. Vous pouvez aussi créer un fichier de sauvegarde à conserver dans l’app Fichiers ou à transférer vers un autre appareil.</p>
+<div class="actions">
+<button class="btn secondary" onclick="exportLocalBackup()">⬇ Exporter la sauvegarde</button>
+<label class="btn secondary" style="cursor:pointer">⬆ Importer une sauvegarde<input id="localBackupImport" type="file" accept=".json,application/json" style="display:none" onchange="importLocalBackup(this)"></label>
+</div>
+</div><div class="card"><div style="display:flex;justify-content:space-between;gap:10px"><h2>Historique des OR</h2><input id="historySearch" placeholder="Rechercher OR, immatriculation, client..." oninput="renderHistory()" style="max-width:340px;width:100%;padding:9px;border:1px solid var(--line);border-radius:8px"></div><div id="historyTable"></div></div></section>
 
 <section id="archived" class="page"><div class="card">
   <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
@@ -525,7 +566,10 @@ function nextId(){return Math.max(0,...db.orders.map(o=>Number(o.id)||0))+1}func
 const titles={dashboard:['Tableau de bord','Gestion locale des ordres de réparation'],newor:['Nouvel ordre de réparation','Saisie basée sur le modèle OR VP'],history:['Historique','Recherche et réouverture des OR'],archived:['OR archivés','Ordres de réparation archivés'],vehicles:['Gestion des véhicules','Base locale des véhicules'],clients:['Gestion des clients','Base locale des clients'],blankor:['Ordre de réparation exemple','Consultation de l’OR exemple'],settings:['Paramètres','Sauvegardes et réglages']};
 function go(id,settingsAuthorized=false){if(id==='settings'&&!settingsAuthorized){requestSettingsAccess();return;}document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));$(id).classList.add('active');document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));$('pageTitle').textContent=titles[id][0];$('pageSub').textContent=titles[id][1];if(id==='history')renderHistory();if(id==='archived')renderArchived();if(id==='vehicles')renderVehicles();if(id==='clients')renderClients();if(id==='blankor')showBlankOR();if(id==='settings')renderArchiveSettings()}
 
-document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>go(b.dataset.page));
+document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{
+  if(b.dataset.page==='newor'){newOrder();return}
+  go(b.dataset.page)
+});
 ['serviceType','tariffType','timeQty','unitQty'].forEach(id=>{
   const el=$(id);
   if(el){
@@ -548,7 +592,14 @@ function startOrGuide(){
  orGuideMode='new';const g=$('orGuide');if(g){g.className='';g.textContent='Merci de saisir l’immatriculation pour commencer.'}
  ['generalBlock','clientBlock','requestBlock','pricingBlock','notesBlock'].forEach(id=>setGuideBlock(id,true,false));
  setGuideBlock('vehicleBlock',false,true);['brand','model','vin'].forEach(id=>{if($(id))$(id).disabled=true});
- if($('plate')){$('plate').disabled=false;setTimeout(()=>$('plate').focus(),40)}
+ if($('plate')){
+  $('plate').disabled=false;
+  setTimeout(()=>{
+    const p=$('plate');
+    try{p.focus({preventScroll:true})}catch(_){p.focus()}
+    try{p.scrollIntoView({behavior:'smooth',block:'center'})}catch(_){}
+  },180)
+}
 }
 function advanceOrGuide(){
  if(orGuideMode!=='new')return;
@@ -569,6 +620,43 @@ function advanceOrGuide(){
  const complete=['plate','brand','model','vin'].every(id=>String($(id)?.value||'').trim());
  if(!complete){if(g){g.className='';g.textContent='Immatriculation inconnue : merci de compléter Marque, Modèle et N° de série / VIN.'}return}
  unlockWholeOr();if(g){g.className='guide-ok';g.textContent='Nouveau véhicule identifié : vous pouvez maintenant compléter le reste de l’ordre de réparation.'}
+}
+
+function updateStorageStatus(){
+  const e=$('storageStatus');if(!e)return;
+  e.textContent=storageMode==='indexedDB'?'● Données locales — IndexedDB':'● Données locales — cet appareil';
+  e.title='Les données sont enregistrées localement sur cet appareil. Utilisez Historique > Exporter la sauvegarde pour créer une copie.';
+}
+
+function localBackupFilename(){
+  const d=new Date(),pad=n=>String(n).padStart(2,'0');
+  return `Sauvegarde_OR_${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}.json`;
+}
+function exportLocalBackup(){
+  try{
+    const payload={format:'ATELIER_P_OR_BACKUP',version:1,exportedAt:new Date().toISOString(),data:db};
+    const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob),a=document.createElement('a');
+    a.href=url;a.download=localBackupFilename();document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1500);
+  }catch(e){alert("Impossible de créer la sauvegarde : "+e.message)}
+}
+function importLocalBackup(input){
+  const file=input?.files?.[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const parsed=JSON.parse(reader.result);
+      const incoming=parsed?.format==='ATELIER_P_OR_BACKUP'?parsed.data:parsed;
+      if(!incoming||!Array.isArray(incoming.orders))throw new Error('Fichier de sauvegarde non reconnu');
+      if(!confirm(`Importer cette sauvegarde ?\n\n${incoming.orders.length} OR seront chargés dans le logiciel.\nLes données locales actuelles seront remplacées.`)){input.value='';return}
+      db=incoming;ensurePricingConfig();persist();
+      renderDashboard();renderHistory();renderVehicles();renderClients();renderReceivers();renderArchiveSettings();
+      alert('Sauvegarde importée avec succès.');
+    }catch(e){alert("Import impossible : "+e.message)}
+    input.value='';
+  };
+  reader.readAsText(file);
 }
 function clearForm(){
   // Tous les champs de saisie d'un nouvel OR repartent à zéro.
@@ -1289,7 +1377,7 @@ async function printOrder(){
     alert("Impossible de générer le PDF : "+e.message);
   }
 }
-function exportData(){let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='atelierP_OR_V35_'+isoToday()+'.json';a.click();URL.revokeObjectURL(a.href)}
+function exportData(){let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='atelierP_OR_V37_'+isoToday()+'.json';a.click();URL.revokeObjectURL(a.href)}
 function importData(ev){let f=ev.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!x.orders||!x.vehicles)throw 0;db=x;persist();alert('Sauvegarde importée.')}catch(e){alert('Fichier non valide.')}};r.readAsText(f);ev.target.value=''}
 try{buildMaintenance();}catch(e){}
 if($('today'))$('today').textContent=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
@@ -1307,4 +1395,6 @@ updatePricing();
     }
   }catch(e){}
 })();
+
+window.addEventListener('load',()=>{try{updateStorageStatus()}catch(_){}});
 </script></body></html>
