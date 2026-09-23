@@ -67,11 +67,12 @@ button,.btn,.nav button{touch-action:manipulation;-webkit-tap-highlight-color:tr
   .tablewrap{-webkit-overflow-scrolling:touch}
   .lockCard{width:100%;max-width:430px;padding:22px 18px}
 }
+.ocr-drop{border:2px dashed #2563eb;border-radius:12px;padding:16px;text-align:center;background:#eff6ff;transition:.2s}.ocr-drop.drag{background:#dbeafe;border-color:#1d4ed8}.ocr-progress{height:9px;background:#dbeafe;border-radius:999px;overflow:hidden;margin-top:10px}.ocr-progress>span{display:block;height:100%;width:0;background:#2563eb;transition:width .2s}.ocr-modal{position:fixed;inset:0;background:rgba(15,23,42,.72);z-index:9999;display:none;align-items:center;justify-content:center;padding:16px}.ocr-modal.open{display:flex}.ocr-dialog{background:white;width:min(920px,100%);max-height:92vh;overflow:auto;border-radius:16px;padding:20px;box-shadow:0 24px 70px rgba(0,0,0,.3)}.ocr-confidence{font-size:11px;font-weight:800}.ocr-ok{color:#15803d}.ocr-warn{color:#b45309}.ocr-missing{color:#b91c1c}.ocr-privacy{border-left:4px solid #16a34a;background:#f0fdf4;padding:9px 12px;border-radius:7px;margin-top:10px}
 </style>
 </head><body><div id="appLock"><div class="lockCard"><h2>Accès au logiciel OR</h2><p>Saisir le code d’accès au logiciel.</p><input id="appCodeInput" type="password" autocomplete="off" placeholder="Code"><button class="btn primary" style="width:100%" onclick="unlockApp()">Ouvrir le logiciel</button><div id="appCodeError" class="lockError"></div></div></div>
 <div id="settingsLock" style="display:none"><div class="lockCard"><h2>Paramètres protégés</h2><p>Saisir le code réservé aux paramètres.</p><input id="settingsCodeInput" type="password" autocomplete="off" placeholder="Code paramètres"><div style="display:flex;gap:8px"><button class="btn ghost" style="flex:1" onclick="cancelSettingsUnlock()">Annuler</button><button class="btn primary" style="flex:1" onclick="unlockSettings()">Ouvrir</button></div><div id="settingsCodeError" class="lockError"></div></div></div>
 <div class="app">
-<aside class="side"><div class="brand"><small>Lycée François de Mahy</small><b>Atelier P<br>Suivi des OR</b></div><div class="nav"><button class="active" data-page="dashboard">▦ Tableau de bord</button><button data-page="newor">＋ Nouvel OR</button><button data-page="history">↺ Historique</button><button data-page="vehicles">🚗 Véhicules</button><button data-page="clients">👤 Clients</button><button data-page="blankor">📄 Voir OR exemple</button><button data-page="settings">⚙ Paramètres</button></div><button class="btn danger" style="margin:12px;width:calc(100% - 24px)" onclick="quitApplication()">⏻ Quitter</button><div class="foot">Prototype V37 - sauvegarde locale iPhone</div></aside>
+<aside class="side"><div class="brand"><small>Lycée François de Mahy</small><b>Atelier P<br>Suivi des OR</b></div><div class="nav"><button class="active" data-page="dashboard">▦ Tableau de bord</button><button data-page="newor">＋ Nouvel OR</button><button data-page="history">↺ Historique</button><button data-page="vehicles">🚗 Véhicules</button><button data-page="clients">👤 Clients</button><button data-page="blankor">📄 Voir OR exemple</button><button data-page="settings">⚙ Paramètres</button></div><button class="btn danger" style="margin:12px;width:calc(100% - 24px)" onclick="quitApplication()">⏻ Quitter</button><div class="foot">Prototype V38 ESSAI OCR - sauvegarde locale</div></aside>
 <main class="main"><div class="top"><div><h1 id="pageTitle">Tableau de bord</h1><p id="pageSub">Gestion locale des ordres de réparation</p></div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
 <div class="datepill" id="storageStatus" title="Les données sont conservées localement sur cet appareil">● Données locales</div>
 <div class="datepill" id="today"></div>
@@ -79,6 +80,7 @@ button,.btn,.nav button{touch-action:manipulation;-webkit-tap-highlight-color:tr
 <section id="dashboard" class="page active"><div class="kpis"><div class="card kpi"><span class="muted small">VÉHICULES</span><b id="kv">0</b></div><div class="card kpi"><span class="muted small">ORDRES DE RÉPARATION</span><b id="ko">0</b></div><div class="card kpi"><span class="muted small">OR CE MOIS</span><b id="km">0</b></div></div><div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h2>Derniers OR</h2><button class="btn primary" onclick="newOrder()">Créer un OR</button></div><div id="recent"></div></div></section>
 <section id="newor" class="page"><div class="notice"><b>V3 :</b> la saisie informatique est volontairement simplifiée. Les contrôles techniques et visuels restent présents sur l’OR imprimé mais leurs cases sont laissées vierges afin d’être complétées manuellement sur le véhicule.</div><div id="orGuide">Merci de saisir l’immatriculation pour commencer.</div>
 <div class="card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div><h2 style="margin:0">Ordre de réparation <span id="orBadge" class="badge">Nouveau</span></h2><span class="muted small">Seules les informations à préparer avant l’accueil du véhicule sont saisies dans le logiciel.</span></div><div class="actions"><button class="btn ghost" onclick="clearForm();startOrGuide()">Réinitialiser</button><button class="btn secondary" onclick="printOrder()">Imprimer OR</button></div></div></div>
+<div class="card" id="ocrCard"><div class="sectionbar">✨ Essai — Préremplissage par carte grise</div><div id="ocrDrop" class="ocr-drop"><b>Importer une carte grise</b><div class="muted small" style="margin:5px 0 12px">Photo JPEG/PNG ou PDF — première page analysée</div><label class="btn primary" style="cursor:pointer">Choisir le document<input id="ocrFile" type="file" accept="image/jpeg,image/png,image/webp,application/pdf,.jpg,.jpeg,.png,.webp,.pdf" hidden onchange="handleRegistrationFile(this.files[0])"></label><div id="ocrProgressWrap" style="display:none"><div class="ocr-progress"><span id="ocrProgressBar"></span></div><div id="ocrStatus" class="small" style="margin-top:7px">Préparation…</div></div></div><div class="ocr-privacy small"><b>Confidentialité :</b> l’image est analysée localement dans ce navigateur et n’est pas enregistrée dans l’OR. Une connexion est nécessaire au premier chargement du moteur OCR.</div></div>
 <div class="card or-general" id="generalBlock"><div class="sectionbar">Informations générales</div><div class="grid g4"><div class="field"><label>N° OR</label><input id="orNumber" readonly></div><div class="field"><label>Date de réception prévue <span style="color:#c62828;font-weight:800">*</span></label><input id="receptionDate" type="date" required oninput="document.getElementById('deliveryDate').value=this.value;advanceOrGuide()" onchange="document.getElementById('deliveryDate').value=this.value;advanceOrGuide()"></div><div class="field"><label>Heure réception</label><input id="receptionTime" type="time"></div><div class="field"><label>Date de livraison prévue</label><input id="deliveryDate" type="date"></div><div class="field"><label>Heure livraison</label><input id="deliveryTime" type="time"></div><div class="field span2"><label>Réceptionnaire / réparateur <span style="color:#c62828;font-weight:800">*</span></label>
   <div style="display:grid;grid-template-columns:1fr 42px;gap:6px;align-items:center">
     <input id="receiver" list="receivers" required autocomplete="off" placeholder="Saisir ou choisir un réceptionnaire" onchange="registerReceiverFromForm();advanceOrGuide()" onblur="registerReceiverFromForm();advanceOrGuide()">
@@ -195,6 +197,9 @@ button,.btn,.nav button{touch-action:manipulation;-webkit-tap-highlight-color:tr
 </main></div>
 <datalist id="plates"></datalist><datalist id="receivers"></datalist>
 <div id="printOR"><div class="orpage" id="printPage"></div></div>
+<div id="ocrModal" class="ocr-modal" role="dialog" aria-modal="true" aria-labelledby="ocrTitle"><div class="ocr-dialog"><div style="display:flex;justify-content:space-between;gap:12px;align-items:start"><div><h2 id="ocrTitle" style="margin:0">Contrôle des informations reconnues</h2><p class="muted small">Corrige les erreurs éventuelles avant de préremplir l’OR.</p></div><button class="btn ghost" onclick="closeOcrModal()">✕ Fermer</button></div><div class="grid g4"><div class="field"><label>Immatriculation</label><input id="ocrPlate"><span id="ocrPlateC" class="ocr-confidence"></span></div><div class="field"><label>Marque</label><input id="ocrBrand"><span id="ocrBrandC" class="ocr-confidence"></span></div><div class="field"><label>Modèle</label><input id="ocrModel"><span id="ocrModelC" class="ocr-confidence"></span></div><div class="field span2"><label>N° de série / VIN</label><input id="ocrVin" maxlength="17"><span id="ocrVinC" class="ocr-confidence"></span></div><div class="field"><label>Nom du titulaire</label><input id="ocrLastName"><span id="ocrLastNameC" class="ocr-confidence"></span></div><div class="field"><label>Prénom</label><input id="ocrFirstName"><span id="ocrFirstNameC" class="ocr-confidence"></span></div><div class="field span2"><label>Adresse</label><input id="ocrAddress"><span id="ocrAddressC" class="ocr-confidence"></span></div><div class="field span2"><label>Code postal / ville</label><input id="ocrCity"><span id="ocrCityC" class="ocr-confidence"></span></div></div><details style="margin-top:14px"><summary><b>Voir le texte lu par l’OCR</b> (utile pour l’essai)</summary><textarea id="ocrRaw" style="width:100%;min-height:150px;margin-top:8px"></textarea><div class="actions" style="margin-top:8px"><button class="btn ghost" onclick="reparseOcrText()">Relancer l’analyse du texte corrigé</button></div></details><div class="actions" style="justify-content:flex-end;margin-top:18px"><button class="btn ghost" onclick="closeOcrModal()">Annuler</button><button class="btn primary" onclick="applyOcrToOrder()">Valider et préremplir l’OR</button></div></div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
 <script>const OR_IDLE_LIMIT=5*60*1000;
 let orIdleTimer=null,orAppUnlocked=false;
 function resetIdleTimer(){if(!orAppUnlocked)return;clearTimeout(orIdleTimer);orIdleTimer=setTimeout(()=>quitApplication(true),OR_IDLE_LIMIT)}
@@ -1377,8 +1382,139 @@ async function printOrder(){
     alert("Impossible de générer le PDF : "+e.message);
   }
 }
-function exportData(){let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='atelierP_OR_V37_'+isoToday()+'.json';a.click();URL.revokeObjectURL(a.href)}
+function exportData(){let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='atelierP_OR_V38_OCR_'+isoToday()+'.json';a.click();URL.revokeObjectURL(a.href)}
 function importData(ev){let f=ev.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!x.orders||!x.vehicles)throw 0;db=x;persist();alert('Sauvegarde importée.')}catch(e){alert('Fichier non valide.')}};r.readAsText(f);ev.target.value=''}
+
+// --- MODULE D'ESSAI OCR CARTE GRISE (V38) ---
+let lastOcrText='';
+function ocrProgress(percent,message){
+  const wrap=$('ocrProgressWrap'),bar=$('ocrProgressBar'),status=$('ocrStatus');
+  if(wrap)wrap.style.display='block';
+  if(bar)bar.style.width=Math.max(0,Math.min(100,percent||0))+'%';
+  if(status)status.textContent=message||'';
+}
+function cleanOcrValue(v){return String(v||'').replace(/^[\s:;|._-]+|[\s:;|._-]+$/g,'').replace(/\s{2,}/g,' ').trim()}
+function normalizedRegText(text){
+  return String(text||'').replace(/\r/g,'').replace(/[|]/g,'I').replace(/[“”]/g,'"').replace(/[‐‑–—]/g,'-');
+}
+function lineValue(lines,code){
+  const c=code.replace('.', '\\.\\s*');
+  const rx=new RegExp('^\\s*'+c+'\\s*[:;._-]*\\s*(.+)$','i');
+  for(let i=0;i<lines.length;i++){
+    const m=lines[i].match(rx);
+    if(m && cleanOcrValue(m[1]).length>1)return cleanOcrValue(m[1]);
+  }
+  return '';
+}
+function findRegistrationAddress(lines){
+  let start=lines.findIndex(l=>/^\s*C\s*[.,]?\s*3\b/i.test(l));
+  let chunks=[];
+  if(start>=0){
+    const first=lines[start].replace(/^\s*C\s*[.,]?\s*3\s*[:;._-]*\s*/i,'');
+    if(first)chunks.push(first);
+    for(let i=start+1;i<Math.min(lines.length,start+4);i++){
+      if(/^\s*[A-Z]\s*[.,]?\s*\d?\s*[:;._-]/i.test(lines[i]))break;
+      if(lines[i])chunks.push(lines[i]);
+      if(/\b\d{5}\b/.test(lines[i]))break;
+    }
+  }
+  const joined=cleanOcrValue(chunks.join(' '));
+  const pc=joined.match(/\b(\d{5})\s+(.+)$/);
+  return {address:cleanOcrValue(pc?joined.slice(0,pc.index):joined),city:pc?cleanOcrValue(pc[1]+' '+pc[2]):''};
+}
+function parseRegistrationText(text){
+  const raw=normalizedRegText(text),lines=raw.split('\n').map(cleanOcrValue).filter(Boolean);
+  const compact=raw.toUpperCase().replace(/\s+/g,' ');
+  let plate=lineValue(lines,'A').toUpperCase();
+  let plateMatch=(plate+' '+compact).match(/\b[A-Z]{2}[ -]?\d{3}[ -]?[A-Z]{2}\b/) || (plate+' '+compact).match(/\b\d{1,4}[ -]?[A-Z]{1,3}[ -]?\d{2,3}\b/);
+  plate=plateMatch?plateMatch[0].replace(/\s+/g,'-'):cleanOcrValue(plate).slice(0,15);
+  let vin=lineValue(lines,'E').toUpperCase().replace(/[^A-Z0-9]/g,'');
+  const vinMatch=compact.replace(/[^A-Z0-9]/g,'').match(/[A-HJ-NPR-Z0-9]{17}/);
+  if(vin.length!==17 && vinMatch)vin=vinMatch[0];
+  let holder=lineValue(lines,'C.1');
+  holder=holder.replace(/\b(MONSIEUR|MADAME|M\.?|MME\.?)\b/ig,'').trim();
+  const hp=holder.split(/\s+/).filter(Boolean);
+  const addr=findRegistrationAddress(lines);
+  return {
+    plate,
+    brand:lineValue(lines,'D.1').replace(/\bMARQUE\b\s*:?/i,'').slice(0,40),
+    model:lineValue(lines,'D.3').replace(/\bDENOMINATION COMMERCIALE\b\s*:?/i,'').slice(0,60),
+    vin:vin.slice(0,17),
+    lastName:hp.shift()||'',
+    firstName:hp.join(' '),
+    address:addr.address,
+    city:addr.city
+  };
+}
+function setOcrConfidence(id,value,kind){
+  const e=$(id+'C');if(!e)return;
+  let good=false;
+  if(kind==='vin')good=/^[A-HJ-NPR-Z0-9]{17}$/.test(value);
+  else if(kind==='plate')good=/^(?:[A-Z]{2}-?\d{3}-?[A-Z]{2}|\d{1,4}-?[A-Z]{1,3}-?\d{2,3})$/.test(String(value).replace(/\s/g,''));
+  else good=String(value||'').trim().length>1;
+  e.className='ocr-confidence '+(!value?'ocr-missing':good?'ocr-ok':'ocr-warn');
+  e.textContent=!value?'Non reconnu — à saisir':good?'Reconnu — à contrôler':'Résultat incertain — à contrôler';
+}
+function showOcrReview(data,text){
+  const map={ocrPlate:data.plate,ocrBrand:data.brand,ocrModel:data.model,ocrVin:data.vin,ocrLastName:data.lastName,ocrFirstName:data.firstName,ocrAddress:data.address,ocrCity:data.city};
+  Object.entries(map).forEach(([id,v])=>{if($(id))$(id).value=v||''});
+  $('ocrRaw').value=text||'';
+  setOcrConfidence('ocrPlate',data.plate,'plate');setOcrConfidence('ocrBrand',data.brand);setOcrConfidence('ocrModel',data.model);setOcrConfidence('ocrVin',data.vin,'vin');setOcrConfidence('ocrLastName',data.lastName);setOcrConfidence('ocrFirstName',data.firstName);setOcrConfidence('ocrAddress',data.address);setOcrConfidence('ocrCity',data.city);
+  $('ocrModal').classList.add('open');
+}
+function closeOcrModal(){$('ocrModal').classList.remove('open')}
+function reparseOcrText(){lastOcrText=$('ocrRaw').value;showOcrReview(parseRegistrationText(lastOcrText),lastOcrText)}
+function applyOcrToOrder(){
+  const pairs={plate:'ocrPlate',brand:'ocrBrand',model:'ocrModel',vin:'ocrVin',lastName:'ocrLastName',firstName:'ocrFirstName',address:'ocrAddress',city:'ocrCity'};
+  Object.entries(pairs).forEach(([dest,src])=>{if($(dest)&&$(src).value.trim())$(dest).value=$(src).value.trim()});
+  closeOcrModal();advanceOrGuide();
+  $('vehicleBlock')?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+async function pdfFileToOcrSource(file){
+  if(!window.pdfjsLib)throw new Error('Le lecteur PDF ne s’est pas chargé. Vérifie la connexion Internet.');
+  pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  const data=await file.arrayBuffer(),doc=await pdfjsLib.getDocument({data}).promise,page=await doc.getPage(1);
+  const tc=await page.getTextContent();
+  const direct=tc.items.map(x=>x.str).join('\n');
+  if(direct.replace(/\s/g,'').length>80)return {text:direct};
+  const viewport=page.getViewport({scale:2.2}),canvas=document.createElement('canvas');
+  canvas.width=Math.ceil(viewport.width);canvas.height=Math.ceil(viewport.height);
+  await page.render({canvasContext:canvas.getContext('2d',{willReadFrequently:true}),viewport}).promise;
+  return {source:canvas};
+}
+async function handleRegistrationFile(file){
+  if(!file)return;
+  const allowed=/^(image\/(jpeg|png|webp)|application\/pdf)$/i.test(file.type)||/\.(jpe?g|png|webp|pdf)$/i.test(file.name);
+  if(!allowed){alert('Choisis une image JPEG/PNG/WEBP ou un PDF.');return}
+  try{
+    ocrProgress(5,'Préparation du document…');
+    let source=file,directText='';
+    if(file.type==='application/pdf'||/\.pdf$/i.test(file.name)){
+      const pdf=await pdfFileToOcrSource(file);source=pdf.source;directText=pdf.text||'';
+    }
+    if(directText){
+      lastOcrText=directText;ocrProgress(100,'Texte du PDF récupéré. Vérification nécessaire.');showOcrReview(parseRegistrationText(lastOcrText),lastOcrText);return;
+    }
+    if(!window.Tesseract)throw new Error('Le moteur OCR ne s’est pas chargé. Vérifie la connexion Internet.');
+    const result=await Tesseract.recognize(source,'fra',{logger:m=>{
+      if(m.status==='recognizing text')ocrProgress(20+Math.round((m.progress||0)*75),'Lecture de la carte grise… '+Math.round((m.progress||0)*100)+' %');
+      else ocrProgress(12,m.status==='loading language traineddata'?'Chargement du français…':'Initialisation de la lecture…');
+    }});
+    lastOcrText=result?.data?.text||'';
+    if(!lastOcrText.trim())throw new Error('Aucun texte n’a été reconnu sur ce document.');
+    ocrProgress(100,'Lecture terminée. Contrôle obligatoire.');showOcrReview(parseRegistrationText(lastOcrText),lastOcrText);
+  }catch(e){console.error(e);ocrProgress(0,'Échec de la lecture.');alert('Lecture impossible : '+(e.message||e));}
+  finally{if($('ocrFile'))$('ocrFile').value=''}
+}
+const ocrDrop=$('ocrDrop');
+if(ocrDrop){
+  ['dragenter','dragover'].forEach(n=>ocrDrop.addEventListener(n,e=>{e.preventDefault();ocrDrop.classList.add('drag')}));
+  ['dragleave','drop'].forEach(n=>ocrDrop.addEventListener(n,e=>{e.preventDefault();ocrDrop.classList.remove('drag')}));
+  ocrDrop.addEventListener('drop',e=>handleRegistrationFile(e.dataTransfer.files[0]));
+}
+if($('ocrModal'))$('ocrModal').addEventListener('click',e=>{if(e.target===$('ocrModal'))closeOcrModal()});
+// --- FIN MODULE OCR ---
+
 try{buildMaintenance();}catch(e){}
 if($('today'))$('today').textContent=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 renderAll();
