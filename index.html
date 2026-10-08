@@ -72,7 +72,7 @@ button,.btn,.nav button{touch-action:manipulation;-webkit-tap-highlight-color:tr
 </head><body><div id="appLock"><div class="lockCard"><h2>Accès au logiciel OR</h2><p>Saisir le code d’accès au logiciel.</p><input id="appCodeInput" type="password" autocomplete="off" placeholder="Code"><button class="btn primary" style="width:100%" onclick="unlockApp()">Ouvrir le logiciel</button><div id="appCodeError" class="lockError"></div></div></div>
 <div id="settingsLock" style="display:none"><div class="lockCard"><h2>Paramètres protégés</h2><p>Saisir le code réservé aux paramètres.</p><input id="settingsCodeInput" type="password" autocomplete="off" placeholder="Code paramètres"><div style="display:flex;gap:8px"><button class="btn ghost" style="flex:1" onclick="cancelSettingsUnlock()">Annuler</button><button class="btn primary" style="flex:1" onclick="unlockSettings()">Ouvrir</button></div><div id="settingsCodeError" class="lockError"></div></div></div>
 <div class="app">
-<aside class="side"><div class="brand"><small>Lycée François de Mahy</small><b>Atelier P<br>Suivi des OR</b></div><div class="nav"><button class="active" data-page="dashboard">▦ Tableau de bord</button><button data-page="newor">＋ Nouvel OR</button><button data-page="history">↺ Historique</button><button data-page="vehicles">🚗 Véhicules</button><button data-page="clients">👤 Clients</button><button data-page="blankor">📄 Voir OR exemple</button><button data-page="settings">⚙ Paramètres</button></div><button class="btn danger" style="margin:12px;width:calc(100% - 24px)" onclick="quitApplication()">⏻ Quitter</button><div class="foot">Prototype V42 OCR multi-zones - sauvegarde locale</div></aside>
+<aside class="side"><div class="brand"><small>Lycée François de Mahy</small><b>Atelier P<br>Suivi des OR</b></div><div class="nav"><button class="active" data-page="dashboard">▦ Tableau de bord</button><button data-page="newor">＋ Nouvel OR</button><button data-page="history">↺ Historique</button><button data-page="vehicles">🚗 Véhicules</button><button data-page="clients">👤 Clients</button><button data-page="blankor">📄 Voir OR exemple</button><button data-page="settings">⚙ Paramètres</button></div><button class="btn danger" style="margin:12px;width:calc(100% - 24px)" onclick="quitApplication()">⏻ Quitter</button><div class="foot">Prototype V43 OCR multi-zones - sauvegarde locale</div></aside>
 <main class="main"><div class="top"><div><h1 id="pageTitle">Tableau de bord</h1><p id="pageSub">Gestion locale des ordres de réparation</p></div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
 <div class="datepill" id="storageStatus" title="Les données sont conservées localement sur cet appareil">● Données locales</div>
 <div class="datepill" id="today"></div>
@@ -1148,6 +1148,9 @@ function directOrderPdf(o){
   const c=s=>commands.push(s);
   const line=(x1,y1,x2,y2)=>c(`${x1} ${PH-y1} m ${x2} ${PH-y2} l S`);
   const rect=(x,y,w,h)=>c(`${x} ${PH-y-h} ${w} ${h} re S`);
+  // Les cases sont dessinées comme des formes PDF : le glyphe Unicode correspondant
+  // n'est pas disponible dans la police intégrée et serait converti en « ? ».
+  const checkbox=(x,y,size=8)=>rect(x,y,size,size);
   const fillRect=(x,y,w,h,g=.92)=>c(`${g} g ${x} ${PH-y-h} ${w} ${h} re f 0 g`);
   const text=(x,y,size,str,bold=false)=>c(`BT /${bold?'F2':'F1'} ${size} Tf ${x} ${PH-y} Td (${pdfEsc(str)}) Tj ET`);
   const fit=(s,n)=>String(s||'').length>n?String(s||'').slice(0,n-1)+'…':String(s||'');
@@ -1195,9 +1198,18 @@ function directOrderPdf(o){
   }
   text(215,367,7,'PNEUMATIQUES – % d’usure',true);
   text(215,383,7,'AVD ____ %   AVG ____ %   ARD ____ %   ARG ____ %');
-  text(215,399,7,'PARE-BRISE :  ☐ FÊLURE   ☐ CASSURE   ☐ ÉCLAT   ☐ BON ÉTAT');
-  text(215,415,7,'RÉTROVISEUR :  D ☐   G ☐');
-  text(215,431,7,'ÉTAT BLOC OPTIQUE / FEUX : AVD ☐  AVG ☐  ARD ☐  ARG ☐');
+  text(215,399,7,'PARE-BRISE :');
+  checkbox(282,391); text(294,399,7,'FÊLURE');
+  checkbox(344,391); text(356,399,7,'CASSURE');
+  checkbox(421,391); text(433,399,7,'ÉCLAT');
+  checkbox(474,391); text(486,399,7,'BON ÉTAT');
+  text(215,415,7,'RÉTROVISEUR : D'); checkbox(301,407);
+  text(316,415,7,'G'); checkbox(328,407);
+  text(215,431,7,'ÉTAT BLOC OPTIQUE / FEUX :');
+  text(365,431,7,'AVD'); checkbox(386,423);
+  text(400,431,7,'AVG'); checkbox(421,423);
+  text(435,431,7,'ARD'); checkbox(456,423);
+  text(470,431,7,'ARG'); checkbox(491,423);
   text(215,447,7,'KM : __________   CARBURANT : 1/4  1/2  3/4  P');
 
   fillRect(36,462,254,20,.86); rect(36,462,254,20); text(125,476,9,'SYMPTÔMES',true);
@@ -1238,7 +1250,8 @@ function directOrderPdf(o){
   wrap(o.notes,80,3).forEach((s,i)=>text(44,obsY+i*12,7,s));
 
   rect(36,742,524,56);
-  text(43,758,8,'ACCORD CLIENT : OUI ☐   NON ☐',true);
+  text(43,758,8,'ACCORD CLIENT : OUI',true); checkbox(158,750,9);
+  text(177,758,8,'NON',true); checkbox(202,750,9);
   text(310,758,8,'SIGNATURE CLIENT :',true);
   text(43,779,7,'Réceptionnaire : '+fit(o.receiver,45));
   text(310,779,7,'Date : __________________');
@@ -1382,7 +1395,7 @@ async function printOrder(){
     alert("Impossible de générer le PDF : "+e.message);
   }
 }
-function exportData(){let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='atelierP_OR_V42_OCR_MULTI_ZONES_'+isoToday()+'.json';a.click();URL.revokeObjectURL(a.href)}
+function exportData(){let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='atelierP_OR_V43_CASES_A_COCHER_'+isoToday()+'.json';a.click();URL.revokeObjectURL(a.href)}
 function importData(ev){let f=ev.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!x.orders||!x.vehicles)throw 0;db=x;persist();alert('Sauvegarde importée.')}catch(e){alert('Fichier non valide.')}};r.readAsText(f);ev.target.value=''}
 
 // --- MODULE OCR CARTE GRISE V42 : lectures ciblées A/C.1, C.3 et D.1/D.3/E ---
